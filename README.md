@@ -3,10 +3,13 @@
 
 CS520 A* Project
 
-MazeVisual-desktop contains all input files & graphical assets, and serves as the launching point for the application.
+To set up the project in Eclipse:
 
-MazeVisual contains all the source code for the application, and should be set as a linked project to MazeVisual-desktop.
+- git clone the repository to some folder
+- In Eclipse, File -> New -> Java Project
+- Name the project "MazeVisual"
+- Uncheck "Use default location"
+- Hit Browse..., and set the location to be the MazeVisual folder that you cloned from the repo.
+- Hit Finish
 
-MazeGenerator should contain the source code for the program that generates the maze text files.
-
-Report should contain the pdf write-up for the project.
+The project can be run via Start.java
