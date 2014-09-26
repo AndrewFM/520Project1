@@ -22,6 +22,23 @@ public class Agent extends GridObject {
 	 * grid.addCellToPath()
 	 * grid.popCellFromPath()
 	 */
+	private void pathFind() {
+		switch (grid.getUI().getPathFindingAlgorithm()) {
+		
+			case ForwardAStar:
+				//TODO
+				break;
+				
+			case BackwardAStar:
+				//TODO
+				break;
+				
+			case AdaptiveAStar:
+				//TODO
+				break;
+				
+		}
+	}
 	
 	/**
 	 * Move the agent one cell in a direction.

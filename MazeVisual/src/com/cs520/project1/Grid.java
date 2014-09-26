@@ -22,17 +22,20 @@ public class Grid {
 	private Point cellDim;		   	 	 // Dimensions of the grid.
 	private GridObject[][] objects;  	 // All objects active on the grid.
 	private ArrayList<Point> pathVisual; // Visualization of a path on the grid.
+	private UI userInterface;			 // Reference to the program interface.
 	public Point agentPoint;			 // Cell containing agent.
 	public Point goalPoint;				 // Cell containing goal.
 	
 	/**
 	 * @param cellDim The size of the grid in columns (x) and rows (y).
 	 */
-	public Grid(Point cellDim) {
+	public Grid(Point cellDim, UI userInterface) {
 		this.cellDim = cellDim;
+		this.userInterface = userInterface;
 		objects = new GridObject[cellDim.x][cellDim.y];
 		pathVisual = new ArrayList<Point>();
 		agentPoint = new Point(0,0);
+		goalPoint = new Point(0,0);
 		clearGrid();
 	}
 	
@@ -312,6 +315,13 @@ public class Grid {
 	 */
 	public void clearPath() {
 		pathVisual.clear();
+	}
+	
+	/**
+	 * Gets a reference to the program interface.
+	 */
+	public UI getUI() {
+		return userInterface;
 	}
 	
 	/**

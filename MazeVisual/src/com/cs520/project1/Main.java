@@ -14,6 +14,7 @@ public class Main implements ApplicationListener {
 	private SpriteBatch batch;
 	private ShapeRenderer shapeRenderer;
 	private Grid environment;
+	private UI userInterface;
 
 	@Override
 	public void create() {
@@ -23,7 +24,8 @@ public class Main implements ApplicationListener {
 		camera.update();
 		batch = new SpriteBatch();
 		shapeRenderer = new ShapeRenderer();
-		environment = new Grid(new Point(101,101));
+		userInterface = new UI();
+		environment = new Grid(new Point(101,101), userInterface);
 		environment.generateEnviroFromFile("mazes/Maze1.txt");
 	}
 
@@ -38,6 +40,7 @@ public class Main implements ApplicationListener {
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);		
 		environment.render(camera, shapeRenderer, batch, new Point(10,30), new Point(800,800));
+		userInterface.render(camera, shapeRenderer, batch, new Point(730,0), new Point(Gdx.graphics.getWidth()-730,Gdx.graphics.getHeight())); 
 	}
 
 	@Override
