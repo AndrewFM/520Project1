@@ -132,11 +132,17 @@ public class UI {
 			
 			//Start Pathfinding Button
 			if (isButtonClicked(startButton)) {
-				if (!environment.doesObjectExist(ObjectType.AGENT)
+				/*if (!environment.doesObjectExist(ObjectType.AGENT)
 				 || !environment.doesObjectExist(ObjectType.GOAL)) {
 					program.showBasicDialog("Please first place both an agent (Left-Click) and Goal (Right-Click) into the maze.");
 				} else {
 					
+				}*/
+				environment.clearPath();
+				GridObject g = environment.objects[environment.agentPoint.x][environment.agentPoint.y];
+				if (g instanceof Agent) {
+					Agent a = (Agent)g;
+					a.forwardAStar(new CellNode(environment.agentPoint), new CellNode(environment.goalPoint));
 				}
 			}
 			

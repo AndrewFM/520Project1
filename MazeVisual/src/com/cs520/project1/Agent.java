@@ -108,8 +108,10 @@ public class Agent extends GridObject {
 			int yPos = current.position.y;
 			
 			//checking neighbours
-			for(int i = xPos-1;i <= xPos+1;i=i++){
-				for(int j = yPos-1; j <= yPos+1; j++){
+			for(int i = xPos-1;i <= xPos+1;i++){
+				for(int j = yPos-1; j <= yPos+1; j++){					
+					if (i == xPos && j == yPos)
+						continue;
 					
 					if(!(xPos<0 || yPos<0 || xPos>=grid.cellDim.x || yPos>=grid.cellDim.y) && (i==xPos || j==yPos)){
 						
@@ -126,7 +128,7 @@ public class Agent extends GridObject {
 								
 								if(!(openList.contains(grid.cellNodes[i][j]))){
 									openList.add(grid.cellNodes[i][j]);
-								}							
+								}
 							}
 						}						
 					}

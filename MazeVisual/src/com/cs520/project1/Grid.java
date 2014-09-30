@@ -20,7 +20,7 @@ public class Grid {
 	};
 	
 	public Point cellDim;		   	 	 // Dimensions of the grid.
-	private GridObject[][] objects;  	 // All objects active on the grid.
+	public GridObject[][] objects;  	 // All objects active on the grid.
 	public CellNode[][] cellNodes;		// Array of cell nodes
 	private ArrayList<CellNode> pathVisual; // Visualization of a path on the grid.
 	private Main program;			 	 // Reference to the main class.
@@ -35,6 +35,11 @@ public class Grid {
 		this.program = program;
 		objects = new GridObject[cellDim.x][cellDim.y];
 		cellNodes = new CellNode[cellDim.x][cellDim.y];
+		for(int i=0;i<cellDim.x;i++) {
+			for(int j=0;j<cellDim.y;j++) {
+				cellNodes[i][j] = new CellNode(new Point(i,j));
+			}
+		}
 		pathVisual = new ArrayList<CellNode>();
 		agentPoint = new Point(0,0);
 		goalPoint = new Point(0,0);
@@ -87,7 +92,8 @@ public class Grid {
 		else {
 			switch (type) {
 			case WALL:
-				objects[cell.x][cell.y] = new Wall(this); break;
+				objects[cell.x][cell.y] = new Wall(this);
+				cellNodes[cell.x][cell.y].gValue = 10000; break;
 			case AGENT:
 				clearGridObject(ObjectType.AGENT);
 				objects[cell.x][cell.y] = new Agent(this);
@@ -274,8 +280,10 @@ public class Grid {
 	 */
 	private void clearGrid() {
 		for(int i=0;i<cellDim.x;i++)
-			for(int j=0;j<cellDim.y;j++)
+			for(int j=0;j<cellDim.y;j++) {
 				objects[i][j] = null;
+				cellNodes[i][j].reset();
+			}
 	}	
 	
 	/**
@@ -320,6 +328,11 @@ public class Grid {
 	 */
 	public void clearPath() {
 		pathVisual.clear();
+		for(int i=0;i<cellDim.x;i++) {
+			for(int j=0;j<cellDim.y;j++) {
+				cellNodes[i][j].reset();
+			}
+		}
 	}
 	
 	/**
