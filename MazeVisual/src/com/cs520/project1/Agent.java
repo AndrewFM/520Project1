@@ -23,7 +23,7 @@ public class Agent extends GridObject {
 	 * grid.popCellFromPath()
 	 */
 	private void pathFind() {
-		switch (grid.getUI().getPathFindingAlgorithm()) {
+		switch (grid.getMain().getPathFindingAlgorithm()) {
 		
 			case ForwardAStar:
 				//TODO

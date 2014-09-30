@@ -2,6 +2,8 @@ package com.cs520.project1;
 
 import java.awt.Point;
 
+import javax.swing.JOptionPane;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
@@ -11,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.cs520.project1.Grid.ObjectType;
 
 /**
  * User Interface Control
@@ -42,14 +45,21 @@ public class UI {
 		}
 	}
 	
+	private Grid environment;
+	private Main program;
 	private BitmapFont font;
-	private PathFind pfMode; 	// Pathfinding Algorithm to use.
-	private TieBreak tbMode; 	// Tie-breaking method to use.
-	private Button[] pfButtons; // Group of buttons to pick pathfinding algo.
-	private Button[] tbButtons; // Group of buttons to pick tie-breaking mode.
+	public PathFind pfMode; 	  // Pathfinding Algorithm to use.
+	public TieBreak tbMode; 	  // Tie-breaking method to use.
+	private Button[] pfButtons;   // Group of buttons to pick pathfinding algo.
+	private Button[] tbButtons;   // Group of buttons to pick tie-breaking mode.
+	private Button startButton;   // Button to initiate the path finding
+	private Button[] mazeButtons; // Buttons to change the displayed maze.
+	private int selectedMaze;
 	
-	public UI() {
+	public UI(Grid environment, Main program) {
 		font = new BitmapFont();
+		this.environment = environment;
+		this.program = program;
 		
 		pfMode = PathFind.ForwardAStar;
 		tbMode = TieBreak.Smaller;
@@ -62,6 +72,24 @@ public class UI {
 		tbButtons = new Button[TieBreak.values().length];
 		tbButtons[TieBreak.Smaller.ordinal()] = new Button("Smaller g-Values", true);
 		tbButtons[TieBreak.Larger.ordinal()] = new Button("Larger g-Values", false);
+		
+		startButton = new Button("Start Pathfinding", false);
+		
+		mazeButtons = new Button[3];
+		mazeButtons[0] = new Button("<", false);
+		mazeButtons[1] = new Button("Maze 1", false);
+		mazeButtons[2] = new Button(">", false);
+		selectedMaze = 0;
+		loadMaze(selectedMaze);
+	}
+	
+	/**
+	 * Load a maze from file.
+	 * @param mazeID The ID of the maze from 0 to NUMBER_OF_MAZES-1.
+	 */
+	public void loadMaze(int mazeID) {
+		environment.generateEnviroFromFile("mazes/Maze"+(Math.max(Math.min(mazeID+1,Main.NUMBER_OF_MAZES),0))+".txt");
+		mazeButtons[1].label = "Maze "+(mazeID+1);
 	}
 	
 	/**
@@ -75,7 +103,7 @@ public class UI {
 	 */
 	public void update(Point pixelPos, Point pixelSize) {
 		//Handle Mouse Actions		
-		if (Gdx.input.justTouched()){
+		if (Gdx.input.justTouched()) {
 			//PathFind Buttons
 			for(int i=0;i<pfButtons.length; i++) {
 				if (isButtonClicked(pfButtons[i])) {
@@ -88,6 +116,7 @@ public class UI {
 					break;
 				}
 			}
+			
 			//TieBreak Buttons
 			for(int i=0;i<tbButtons.length; i++) {
 				if (isButtonClicked(tbButtons[i])) {
@@ -99,6 +128,35 @@ public class UI {
 					}
 					break;
 				}
+			}
+			
+			//Start Pathfinding Button
+			if (isButtonClicked(startButton)) {
+				if (!environment.doesObjectExist(ObjectType.AGENT)
+				 || !environment.doesObjectExist(ObjectType.GOAL)) {
+					program.showBasicDialog("Please first place both an agent (Left-Click) and Goal (Right-Click) into the maze.");
+				} else {
+					
+				}
+			}
+			
+			//Maze Buttons
+			if (isButtonClicked(mazeButtons[0])) { //Previous
+				if (selectedMaze == 0)
+					selectedMaze = Main.NUMBER_OF_MAZES-1;
+				else
+					selectedMaze -= 1;
+				loadMaze(selectedMaze);
+			}
+			if (isButtonClicked(mazeButtons[2])) { //Next
+				if (selectedMaze == Main.NUMBER_OF_MAZES-1)
+					selectedMaze = 0;
+				else
+					selectedMaze += 1;
+				loadMaze(selectedMaze);
+			}
+			if (isButtonClicked(mazeButtons[1])) { //Select Maze #
+				
 			}
 		}
 	}
@@ -136,47 +194,53 @@ public class UI {
 		float buttonWidth = 0.8f;
 		float pfHeight = 0.95f;
 		float tbHeight = 0.65f;
+		float startHeight = 0.1f+buttonHeight+buttonSpacing;
+		float mazeHeight = 0.1f;
 		font.setColor(0, 0, 0, 1);
 		
 		//Pathfinding section & buttons
 		drawTextCentered(font, batch, "Pathfinding Mode:", pixelPos.x + pixelSize.x/2f, pixelPos.y + pixelSize.y*pfHeight);
 		for(int i=0; i<pfButtons.length; i++) {
-			Button b = pfButtons[i];
-			b.pixelPos.x = (int)(pixelPos.x+pixelSize.x*((1-buttonWidth)/2f));
-			b.pixelPos.y = (int)(pixelPos.y + pixelSize.y*pfHeight - pixelSize.y*(buttonHeight+buttonSpacing)*(i+1));
-			b.pixelSize.x = (int)(pixelSize.x*buttonWidth);
-			b.pixelSize.y = (int)(pixelSize.y*buttonHeight);
-			drawButton(b, render, batch, font);
+			pfButtons[i].pixelPos.x = (int)(pixelPos.x+pixelSize.x*((1-buttonWidth)/2f));
+			pfButtons[i].pixelPos.y = (int)(pixelPos.y + pixelSize.y*pfHeight - pixelSize.y*(buttonHeight+buttonSpacing)*(i+1));
+			pfButtons[i].pixelSize.x = (int)(pixelSize.x*buttonWidth);
+			pfButtons[i].pixelSize.y = (int)(pixelSize.y*buttonHeight);
+			drawButton(pfButtons[i], render, batch, font);
 		}
 		
 		//Tie-breaking section & buttons
 		drawTextCentered(font, batch, "Tie Breaking Mode:", pixelPos.x + pixelSize.x/2f, pixelPos.y + pixelSize.y*tbHeight);
 		for(int i=0; i<tbButtons.length; i++) {
-			Button b = tbButtons[i];
-			b.pixelPos.x = (int)(pixelPos.x+pixelSize.x*((1-buttonWidth)/2f));
-			b.pixelPos.y = (int)(pixelPos.y + pixelSize.y*tbHeight - pixelSize.y*(buttonHeight+buttonSpacing)*(i+1));
-			b.pixelSize.x = (int)(pixelSize.x*buttonWidth);
-			b.pixelSize.y = (int)(pixelSize.y*buttonHeight);
-			drawButton(b, render, batch, font);
+			tbButtons[i].pixelPos.x = (int)(pixelPos.x+pixelSize.x*((1-buttonWidth)/2f));
+			tbButtons[i].pixelPos.y = (int)(pixelPos.y + pixelSize.y*tbHeight - pixelSize.y*(buttonHeight+buttonSpacing)*(i+1));
+			tbButtons[i].pixelSize.x = (int)(pixelSize.x*buttonWidth);
+			tbButtons[i].pixelSize.y = (int)(pixelSize.y*buttonHeight);
+			drawButton(tbButtons[i], render, batch, font);
+		}
+		
+		//Start Button
+		startButton.pixelPos.x = (int)(pixelPos.x+pixelSize.x*((1-buttonWidth)/2f));
+		startButton.pixelPos.y = (int)(pixelPos.y + pixelSize.y*startHeight);
+		startButton.pixelSize.x = (int)(pixelSize.x*buttonWidth);
+		startButton.pixelSize.y = (int)(pixelSize.y*buttonHeight);
+		drawButton(startButton, render, batch, font);
+		
+		//Maze Buttons
+		mazeButtons[0].pixelPos.x = (int)(pixelPos.x+pixelSize.x*0.1f);
+		mazeButtons[1].pixelPos.x = (int)(pixelPos.x+pixelSize.x*0.25f);
+		mazeButtons[2].pixelPos.x = (int)(pixelPos.x+pixelSize.x*0.8f);
+		mazeButtons[0].pixelSize.x = (int)(pixelSize.x*0.1f);
+		mazeButtons[1].pixelSize.x = (int)(pixelSize.x*0.5f);
+		mazeButtons[2].pixelSize.x = (int)(pixelSize.x*0.1f);
+		for(int i=0; i<mazeButtons.length; i++) {
+			mazeButtons[i].pixelPos.y = (int)(pixelPos.y + pixelSize.y*mazeHeight);
+			mazeButtons[i].pixelSize.y = (int)(pixelSize.y*buttonHeight);
+			drawButton(mazeButtons[i], render, batch, font);
 		}
 		
 		batch.end();
 		
 		update(pixelPos, pixelSize);
-	}
-	
-	/**
-	 * @return The tie-breaking method to use.
-	 */
-	public TieBreak getTieBreakingMode() {
-		return tbMode;
-	}
-	
-	/**
-	 * @return The pathfinding algorithm to use.
-	 */
-	public PathFind getPathFindingAlgorithm() {
-		return pfMode;
 	}
 	
 	/**

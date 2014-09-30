@@ -22,16 +22,16 @@ public class Grid {
 	private Point cellDim;		   	 	 // Dimensions of the grid.
 	private GridObject[][] objects;  	 // All objects active on the grid.
 	private ArrayList<CellNode> pathVisual; // Visualization of a path on the grid.
-	private UI userInterface;			 // Reference to the program interface.
+	private Main program;			 	 // Reference to the main class.
 	public Point agentPoint;			 // Cell containing agent.
 	public Point goalPoint;				 // Cell containing goal.
 	
 	/**
 	 * @param cellDim The size of the grid in columns (x) and rows (y).
 	 */
-	public Grid(Point cellDim, UI userInterface) {
+	public Grid(Point cellDim, Main program) {
 		this.cellDim = cellDim;
-		this.userInterface = userInterface;
+		this.program = program;
 		objects = new GridObject[cellDim.x][cellDim.y];
 		pathVisual = new ArrayList<CellNode>();
 		agentPoint = new Point(0,0);
@@ -318,10 +318,10 @@ public class Grid {
 	}
 	
 	/**
-	 * Gets a reference to the program interface.
+	 * Gets a reference to the main program class.
 	 */
-	public UI getUI() {
-		return userInterface;
+	public Main getMain() {
+		return program;
 	}
 	
 	/**
