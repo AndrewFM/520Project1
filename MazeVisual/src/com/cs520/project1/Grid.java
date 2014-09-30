@@ -21,7 +21,7 @@ public class Grid {
 	
 	private Point cellDim;		   	 	 // Dimensions of the grid.
 	private GridObject[][] objects;  	 // All objects active on the grid.
-	private ArrayList<Point> pathVisual; // Visualization of a path on the grid.
+	private ArrayList<CellNode> pathVisual; // Visualization of a path on the grid.
 	private UI userInterface;			 // Reference to the program interface.
 	public Point agentPoint;			 // Cell containing agent.
 	public Point goalPoint;				 // Cell containing goal.
@@ -33,7 +33,7 @@ public class Grid {
 		this.cellDim = cellDim;
 		this.userInterface = userInterface;
 		objects = new GridObject[cellDim.x][cellDim.y];
-		pathVisual = new ArrayList<Point>();
+		pathVisual = new ArrayList<CellNode>();
 		agentPoint = new Point(0,0);
 		goalPoint = new Point(0,0);
 		clearGrid();
@@ -292,19 +292,19 @@ public class Grid {
 	 * 
 	 * @param cell The (col,row) coordinates of the cell to add.
 	 */
-	public void addCellToPath(Point cell) {
-		if (!isValidCell(cell,true))
+	public void addCellToPath(CellNode cell) {
+		if (!isValidCell(cell.position,true))
 			return;
-		pathVisual.add(new Point(cell.x,cell.y));
+		pathVisual.add(cell);
 	}
 	
 	/**
 	 * Removes the most recently added cell from the path.
 	 * @return The cell that was removed.
 	 */
-	public Point popCellFromPath() {
-		Point p = pathVisual.get(pathVisual.size()-1);
-		Point q = new Point(p.x,p.y);
+	public CellNode popCellFromPath() {
+		CellNode p = pathVisual.get(pathVisual.size()-1);
+		CellNode q = new CellNode(p);
 		pathVisual.remove(pathVisual.size()-1);
 		
 		return q;
@@ -338,11 +338,11 @@ public class Grid {
 			return;
 		
 		Point cellSize = new Point(pixelSize.x/cellDim.x,pixelSize.y/cellDim.y);
-		Point oldPoint = pathVisual.get(0);
+		Point oldPoint = pathVisual.get(0).position;
 		Point newPoint = null;
 		
 		for(int i=1;i<pathVisual.size();i++) {
-			newPoint = pathVisual.get(i);
+			newPoint = pathVisual.get(i).position;
 			render.line(pixelPos.x+cellSize.x*oldPoint.x, 
 						pixelPos.y+cellSize.y*oldPoint.y, 
 						pixelPos.x+cellSize.x*newPoint.x, 
