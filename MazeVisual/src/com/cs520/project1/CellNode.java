@@ -39,9 +39,19 @@ public class CellNode {
 		fValue = gValue+hValue;
 	}
 
-	public void setHValue(int h) {
-		hValue = h;
-		fValue = gValue+hValue;
+	public int calculateHValue(CellNode currentNode, CellNode goalNode) {
+		return (Math.abs(currentNode.position.x-goalNode.position.x)+Math.abs(currentNode.position.y-goalNode.position.y));
+	}
+	
+	public void setFValue(CellNode currentNode, CellNode goalNode){
+		hValue=calculateHValue(currentNode, goalNode);
+		fValue=gValue+fValue;
+	}
+	
+	public boolean equals(Object cellNode){
+		if(cellNode instanceof CellNode && ((CellNode)cellNode).position.equals(position))
+			return true;
+		return false;
 	}
 	
 }
