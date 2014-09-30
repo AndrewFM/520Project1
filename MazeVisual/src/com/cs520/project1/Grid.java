@@ -19,8 +19,9 @@ public class Grid {
 		AGENT, WALL, GOAL
 	};
 	
-	private Point cellDim;		   	 	 // Dimensions of the grid.
+	public Point cellDim;		   	 	 // Dimensions of the grid.
 	private GridObject[][] objects;  	 // All objects active on the grid.
+	public CellNode[][] cellNodes;		// Array of cell nodes
 	private ArrayList<CellNode> pathVisual; // Visualization of a path on the grid.
 	private Main program;			 	 // Reference to the main class.
 	public Point agentPoint;			 // Cell containing agent.
@@ -33,6 +34,7 @@ public class Grid {
 		this.cellDim = cellDim;
 		this.program = program;
 		objects = new GridObject[cellDim.x][cellDim.y];
+		cellNodes = new CellNode[cellDim.x][cellDim.y];
 		pathVisual = new ArrayList<CellNode>();
 		agentPoint = new Point(0,0);
 		goalPoint = new Point(0,0);
@@ -249,6 +251,9 @@ public class Grid {
 				for(int i=0;i<Math.min(lineChars.length,cellDim.x); i++) {
 					if (lineChars[i] == '1')
 						addObjectToCell(new Point(i,row), ObjectType.WALL);
+					
+					cellNodes[i][row].position.setLocation(i, row);
+					cellNodes[i][row].setGValue(0);
 				}
 				row += 1;
 				if (row == cellDim.y)
