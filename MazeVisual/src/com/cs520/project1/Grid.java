@@ -16,7 +16,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 public class Grid {
 
 	public static enum ObjectType {
-		AGENT, WALL, GOAL
+		AGENT, WALL, GOAL, VACANT
 	};
 	
 	public Point cellDim;		   	 	 // Dimensions of the grid.
@@ -35,9 +35,11 @@ public class Grid {
 		this.program = program;
 		objects = new GridObject[cellDim.x][cellDim.y];
 		cellNodes = new CellNode[cellDim.x][cellDim.y];
+		Point p = new Point();
 		for(int i=0;i<cellDim.x;i++) {
 			for(int j=0;j<cellDim.y;j++) {
-				cellNodes[i][j] = new CellNode(new Point(i,j));
+				p.setLocation(i,j);
+				cellNodes[i][j] = new CellNode(p);
 			}
 		}
 		pathVisual = new ArrayList<CellNode>();
@@ -66,15 +68,46 @@ public class Grid {
 	 * 
 	 * @param cell The (col,row) coordinate of the cell to check.
 	 * @return The ObjectType of the object in the designated cell, or
-	 *         null if the cell is not occupied.
+	 *         ObjectType.VACANT if the cell is not occupied.
 	 */
-	public ObjectType getObjectAtCell(Point cell) {
+	public ObjectType getObjectTypeAtCell(Point cell) {		
 		if (!isValidCell(cell,false))
 			return ObjectType.WALL;
 		if (objects[cell.x][cell.y] == null)
-			return null;
+			return ObjectType.VACANT;
 		else
 			return objects[cell.x][cell.y].getType();
+	}
+	
+	/**
+	 * Gets the GridObject reference to the object at the designated
+	 * cell.
+	 * 
+	 * @param cell The (col,row) coordinate of the cell to check.
+	 * @return The GridObject at that position, or null if the cell
+	 * 		   is vacant, or an invalid cell was specified.
+	 */
+	public GridObject getObjectAtCell(Point cell) {
+		if (!isValidCell(cell,false))
+			return null;
+		else
+			return objects[cell.x][cell.y];		
+	}
+	
+	/**
+	 * Gets the CellNode reference to the cell's properties at the
+	 * designated position.
+	 * 
+	 * @param cell The (col,row) coordinate of the cell to check.
+	 * @return The CellNode reference at that position. If an invalid
+	 * 		   cell is specified, this will return a CellNode reference
+	 * 		   with a very large f-value.
+	 */
+	public CellNode getCellProperties(Point cell) {
+		if (!isValidCell(cell,false))
+			return new CellNode(cell, cellDim.x*cellDim.y, cellDim.x*3);
+		else
+			return cellNodes[cell.x][cell.y];
 	}
 	
 	/**
@@ -105,6 +138,8 @@ public class Grid {
 				objects[cell.x][cell.y] = new Goal(this);
 				goalPoint.x = cell.x;
 				goalPoint.y = cell.y;
+				break;
+			default:
 				break;
 			}
 			return 1;
@@ -250,13 +285,16 @@ public class Grid {
 			BufferedReader read = new BufferedReader(new FileReader(filePath));
 			String line = "";
 			int row = 0;
+			Point p = new Point();
 			
 			clearGrid();
 			while ((line = read.readLine()) != null) {
 				char[] lineChars = line.toCharArray();
 				for(int i=0;i<Math.min(lineChars.length,cellDim.x); i++) {
-					if (lineChars[i] == '1')
-						addObjectToCell(new Point(i,row), ObjectType.WALL);
+					if (lineChars[i] == '1') {
+						p.setLocation(i,row);
+						addObjectToCell(p, ObjectType.WALL);
+					}
 					
 					cellNodes[i][row].position.setLocation(i, row);
 					cellNodes[i][row].setGValue(0);

@@ -8,12 +8,14 @@ public class CellNode implements Comparable {
 	public int gValue;
 	public int fValue;
 	public int hValue;
+	public boolean visited;
 	
 	public CellNode(Point cell) {
 		this.position = new Point(cell.x, cell.y);
 		gValue = 0;
 		fValue = 0;
 		hValue = 0;
+		visited = false;
 	}
 	
 	public CellNode(Point cell, int g, int h) {
@@ -21,6 +23,7 @@ public class CellNode implements Comparable {
 		gValue = g;
 		hValue = h;
 		fValue = g+h;
+		visited = false;
 	}
 	
 	public CellNode(CellNode c) {
@@ -28,6 +31,7 @@ public class CellNode implements Comparable {
 		gValue = c.gValue;
 		hValue = c.hValue;
 		fValue = gValue+fValue;
+		visited = c.visited;
 	}
 	
 	public void setGValue(int g) {
@@ -48,6 +52,7 @@ public class CellNode implements Comparable {
 		gValue = 0;
 		hValue = 0;
 		fValue = 0;
+		visited = false;
 	}
 	
 	public boolean equals(Object cellNode){
