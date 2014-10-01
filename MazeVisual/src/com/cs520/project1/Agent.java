@@ -6,6 +6,7 @@ import java.util.PriorityQueue;
 
 import com.cs520.project1.Grid.ObjectType;
 import com.cs520.project1.CellNode;
+import com.cs520.project1.UI.PathFind;
 
 /**
  * The Agent in the environment that needs to find a shortest path to the goal.
@@ -13,10 +14,16 @@ import com.cs520.project1.CellNode;
 public class Agent extends GridObject {
 
 	private Grid grid;
+	private Point[] actionList;
 	
 	public Agent(Grid grid) {
 		super(Grid.ObjectType.AGENT ,"data/agent.png");
 		this.grid = grid;
+		actionList = new Point[4];
+		actionList[0] = new Point(0,1);
+		actionList[1] = new Point(0,-1);
+		actionList[2] = new Point(1,0);
+		actionList[3] = new Point(-1,0);
 	}
 	
 	/*
@@ -27,15 +34,15 @@ public class Agent extends GridObject {
 	 * grid.addCellToPath()
 	 * grid.popCellFromPath()
 	 */
-	private void pathFind() {
+	public void pathFind() {
 		switch (grid.getMain().getPathFindingAlgorithm()) {
 		
 			case ForwardAStar:
-				forwardAStar(grid.getCellProperties(grid.agentPoint), grid.getCellProperties(grid.goalPoint));
+				AStar();
 				break;
 				
 			case BackwardAStar:
-				//TODO
+				AStar();
 				break;
 				
 			case AdaptiveAStar:
@@ -45,64 +52,80 @@ public class Agent extends GridObject {
 		}
 	}
 	
-	public boolean forwardAStar(CellNode start, CellNode goal){
-		
-		int calc_gValue;
-		CellNode current;
+	public void ComputePath(PriorityQueue<CellNode> openList, ArrayList<CellNode> closedList, CellNode goal, int counter) {
+		while (goal.gValue > openList.peek().fValue) {
+			CellNode minInOpen = openList.peek();
+			openList.remove(minInOpen);
+			closedList.add(minInOpen);
+			
+			for(Point a : actionList) {
+				CellNode succ = grid.getCellProperties(new Point(minInOpen.position.x+a.x, minInOpen.position.y+a.y));
+				if (grid.getObjectTypeAtCell(succ.position) == ObjectType.WALL)
+					continue;
+				
+				if (succ.search < counter) {
+					succ.gValue = Integer.MAX_VALUE;
+					succ.search = counter;
+				}
+				if (succ.gValue > minInOpen.gValue + 1) {
+					succ.gValue = minInOpen.gValue + 1;
+					succ.parentOnPath = minInOpen;
+					if (openList.contains(succ))
+						openList.remove(succ);
+					succ.calculateFValue(goal);
+					openList.add(succ);
+				}
+			}
+			
+			if (openList.isEmpty())
+				break;
+		}
+	}
+	
+	public boolean AStar() {
+		int counter = 0;
 		ArrayList<CellNode> closedList = new ArrayList<CellNode>();
 		PriorityQueue<CellNode> openList = new PriorityQueue<CellNode>();
 		
-		start.setGValue(0); //gValue of Start is 0
-		start.setFValue(start, goal);
+		CellNode state;
+		CellNode goal;
 		
-		openList.add(start);
-		
-		while(!openList.isEmpty()){
+		//Forward A* searches from the Agent to the Goal.
+		if (grid.getMain().getPathFindingAlgorithm() == PathFind.ForwardAStar) {
+			state = grid.getCellProperties(grid.agentPoint);
+			goal = grid.getCellProperties(grid.goalPoint);
 			
-			current = openList.peek();
-			
-			//SUCCESS condition
-			if (current.equals(goal)){
-				return true;			
-			}
-			
-			openList.remove();
-			closedList.add(current);
-			
-			int xPos = current.position.x;
-			int yPos = current.position.y;
-			
-			//checking neighbours
-			for(int i = xPos-1;i <= xPos+1;i++){
-				for(int j = yPos-1; j <= yPos+1; j++){					
-					if (i == xPos && j == yPos)
-						continue;
-					
-					if(!(xPos<0 || yPos<0 || xPos>=grid.cellDim.x || yPos>=grid.cellDim.y) && (i==xPos || j==yPos)){
-						
-						if(grid.getObjectTypeAtCell(new Point(i,j))!=ObjectType.WALL){
-							if(closedList.contains(grid.cellNodes[i][j])){
-								continue;
-							}
-							calc_gValue = current.gValue + 1;   //gValue is 1 from current node to new node
-							
-							if(!(openList.contains(grid.cellNodes[i][j])) ||  calc_gValue < grid.cellNodes[i][j].gValue){
-								grid.addCellToPath(current);
-								grid.cellNodes[i][j].setGValue(calc_gValue);
-								grid.cellNodes[i][j].setFValue(grid.cellNodes[i][j], goal);
-								
-								if(!(openList.contains(grid.cellNodes[i][j]))){
-									openList.add(grid.cellNodes[i][j]);
-								}
-							}
-						}						
-					}
-				}
-			}
+		//Backwards A* searches from the Goal to the Agent.
+		} else {
+			state = grid.getCellProperties(grid.goalPoint);
+			goal = grid.getCellProperties(grid.agentPoint);			
 		}
-		return false;
 		
-		
+		while (!state.equals(goal)) {
+			counter += 1;
+			goal.search = counter;
+			goal.setGValue(Integer.MAX_VALUE);	
+			
+			state.search = counter;
+			state.calculateFValue(goal);
+			openList.add(state);
+			
+			ComputePath(openList, closedList, goal, counter);
+			
+			if (openList.isEmpty()) {
+				grid.getMain().showBasicDialog("There does not exist a path from the agent to the goal.");
+				return false;
+			}
+			
+			CellNode tracePath = goal;
+			while (tracePath != state) {
+				grid.addCellToPath(tracePath);
+				tracePath = tracePath.parentOnPath;
+			}
+			
+			state = goal;
+		}
+		return true;
 	}
 	
 }

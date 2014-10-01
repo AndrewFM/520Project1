@@ -142,7 +142,7 @@ public class UI {
 				GridObject g = environment.objects[environment.agentPoint.x][environment.agentPoint.y];
 				if (g instanceof Agent) {
 					Agent a = (Agent)g;
-					a.forwardAStar(new CellNode(environment.agentPoint), new CellNode(environment.goalPoint));
+					a.pathFind();
 				}
 			}
 			

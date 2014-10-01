@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -39,7 +40,7 @@ public class Grid {
 		for(int i=0;i<cellDim.x;i++) {
 			for(int j=0;j<cellDim.y;j++) {
 				p.setLocation(i,j);
-				cellNodes[i][j] = new CellNode(p);
+				cellNodes[i][j] = new CellNode(getMain(),p);
 			}
 		}
 		pathVisual = new ArrayList<CellNode>();
@@ -105,7 +106,7 @@ public class Grid {
 	 */
 	public CellNode getCellProperties(Point cell) {
 		if (!isValidCell(cell,false))
-			return new CellNode(cell, cellDim.x*cellDim.y, cellDim.x*3);
+			return new CellNode(getMain(), cell, cellDim.x*cellDim.y, cellDim.x*3);
 		else
 			return cellNodes[cell.x][cell.y];
 	}
@@ -125,8 +126,7 @@ public class Grid {
 		else {
 			switch (type) {
 			case WALL:
-				objects[cell.x][cell.y] = new Wall(this);
-				cellNodes[cell.x][cell.y].gValue = 10000; break;
+				objects[cell.x][cell.y] = new Wall(this); break;
 			case AGENT:
 				clearGridObject(ObjectType.AGENT);
 				objects[cell.x][cell.y] = new Agent(this);
@@ -239,6 +239,10 @@ public class Grid {
 			for(int j=0;j<cellDim.y;j++) {				
 				if (objects[i][j] != null)
 					objects[i][j].render(batch, new Point(pixelPos.x+cellSize.x*i,pixelPos.y+cellSize.y*j), cellSize);
+				//TODO
+				//if (cellNodes[i][j].fValue != 0) {
+				//	render.rect(pixelPos.x+cellSize.x*i,pixelPos.y+cellSize.y*j, cellSize.x, cellSize.y);
+				//}
 			}
 		}
 		batch.end();
@@ -399,10 +403,10 @@ public class Grid {
 		
 		for(int i=1;i<pathVisual.size();i++) {
 			newPoint = pathVisual.get(i).position;
-			render.line(pixelPos.x+cellSize.x*oldPoint.x, 
-						pixelPos.y+cellSize.y*oldPoint.y, 
-						pixelPos.x+cellSize.x*newPoint.x, 
-						pixelPos.y+cellSize.y*newPoint.y);
+			render.line(pixelPos.x+cellSize.x*oldPoint.x+(cellSize.x/2), 
+						pixelPos.y+cellSize.y*oldPoint.y+(cellSize.y/2), 
+						pixelPos.x+cellSize.x*newPoint.x+(cellSize.x/2), 
+						pixelPos.y+cellSize.y*newPoint.y+(cellSize.y/2));
 			oldPoint = newPoint;
 		}
 	}

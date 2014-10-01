@@ -68,11 +68,13 @@ public class Main implements ApplicationListener {
 		return userInterface.pfMode;
 	}
 	
+	//TODO
 	public void showBasicDialog(String message) {
-		Skin skin = new Skin();
+		/*Skin skin = new Skin();
 		Dialog dialog = new Dialog("...", skin) {
 			protected void result (Object object) { }
-		}.text(message).button("Okay",true).key(Keys.ENTER, true).show(stage);
+		}.text(message).button("Okay",true).key(Keys.ENTER, true).show(stage);*/
+		System.out.println(message);
 	}
 	
 	@Override
