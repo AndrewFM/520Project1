@@ -1,7 +1,6 @@
 package com.cs520.project1;
 
 import java.awt.Point;
-import java.util.ArrayList;
 import java.util.PriorityQueue;
 
 import com.cs520.project1.Grid.ObjectType;
@@ -62,7 +61,7 @@ public class Agent extends GridObject {
 	 */
 	public boolean AStar() {
 		int counter = 0;
-		PriorityQueue<CellNode> openList = new PriorityQueue<CellNode>();
+		BinaryHeap<CellNode> openList = new BinaryHeap<CellNode>();
 		CellNode state;
 		CellNode goal;
 		
@@ -84,7 +83,7 @@ public class Agent extends GridObject {
 			
 			state.search = counter;
 			state.calculateFValue(goal);
-			openList.add(state);
+			openList.insert(state);
 			
 			ComputePath(openList, goal, counter);
 			
@@ -109,7 +108,7 @@ public class Agent extends GridObject {
 	/**
 	 * A subroutine of A* to find the path from the agent's current position to the goal.
 	 */
-	public void ComputePath(PriorityQueue<CellNode> openList, CellNode goal, int counter) {
+	public void ComputePath(BinaryHeap<CellNode> openList, CellNode goal, int counter) {
 		while (goal.gValue > openList.peek().fValue) {
 			CellNode minInOpen = openList.peek();
 			openList.remove(minInOpen);
@@ -129,7 +128,7 @@ public class Agent extends GridObject {
 					if (openList.contains(succ))
 						openList.remove(succ);
 					succ.calculateFValue(goal);
-					openList.add(succ);
+					openList.insert(succ);
 					visitedCount++;
 				}
 			}
