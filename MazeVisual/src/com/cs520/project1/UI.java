@@ -51,7 +51,7 @@ public class UI {
 	private Button startButton;   // Button to initiate the path finding
 	private Button[] mazeButtons; // Buttons to change the displayed maze.
 	private int selectedMaze;
-	private String debugString;
+	private String debugString = "";
 	
 	public UI(Grid environment) {
 		font = new BitmapFont();
@@ -78,8 +78,6 @@ public class UI {
 		mazeButtons[2] = new Button(">", false);
 		selectedMaze = 0;
 		loadMaze(selectedMaze);
-		
-		debugString = "(Left Click) Place Agent\n(Right Click) Place Goal";
 	}
 	
 	/**
@@ -89,6 +87,7 @@ public class UI {
 	public void loadMaze(int mazeID) {
 		environment.generateEnviroFromFile("mazes/Maze"+(Math.max(Math.min(mazeID+1,Main.NUMBER_OF_MAZES),0))+".txt");
 		mazeButtons[1].label = "Maze "+(mazeID+1);
+		setUIDebugString(getDefaultDebugString());
 	}
 	
 	/**
@@ -133,7 +132,7 @@ public class UI {
 			if (isButtonClicked(startButton)) {
 				if (!environment.doesObjectExist(ObjectType.AGENT)
 				 || !environment.doesObjectExist(ObjectType.GOAL)) {
-					environment.getMain().showBasicDialog("ERROR: Agent and/or Goal is\nmissing! Please add them\ninto the grid.\n \n(Left Click) Place Agent\n(Right Click) Place Goal");
+					environment.getMain().showBasicDialog("ERROR: Agent and/or Goal is\nmissing! Please add them\ninto the grid.\n \n"+getDefaultDebugString());
 				} else {
 					
 				}
@@ -311,6 +310,10 @@ public class UI {
 	
 	public void setUIDebugString(String message) {
 		debugString = message;
+	}
+	
+	public String getDefaultDebugString() {
+		return "(Left Click) Place Agent\n(Right Click) Place Goal";
 	}
 	
 }

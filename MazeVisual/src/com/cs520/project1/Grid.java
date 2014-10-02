@@ -267,7 +267,7 @@ public class Grid {
 		render.begin(ShapeType.Line);
 		
 		render.setColor(0.95f, 0.95f, 0.95f, 1f);
-		for(int i=0; i<cellDim.x; i++) {
+		for(int i=0; i<=cellDim.x; i++) {
 				//Vertical Grid Lines
 				render.line(pixelPos.x+cellSize.x*i, 
 							pixelPos.y, 
@@ -275,7 +275,7 @@ public class Grid {
 							pixelPos.y+cellSize.y*cellDim.y);
 		}
 		
-		for(int i=0; i<cellDim.y; i++) {
+		for(int i=0; i<=cellDim.y; i++) {
 				//Horizontal Grid Lines
 				render.line(pixelPos.x, 
 							pixelPos.y+cellSize.y*i, 
