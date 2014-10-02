@@ -2,10 +2,7 @@ package com.cs520.project1;
 
 import java.awt.Point;
 
-import javax.swing.JOptionPane;
-
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -21,7 +18,7 @@ import com.cs520.project1.Grid.ObjectType;
 public class UI {
 
 	public static enum PathFind {
-		ForwardAStar, BackwardAStar, AdaptiveAStar 
+		ForwardAStar, BackwardAStar, AdaptiveAStar, DStarLite 
 	};
 	
 	public static enum TieBreak {
@@ -46,7 +43,6 @@ public class UI {
 	}
 	
 	private Grid environment;
-	private Main program;
 	private BitmapFont font;
 	public PathFind pfMode; 	  // Pathfinding Algorithm to use.
 	public TieBreak tbMode; 	  // Tie-breaking method to use.
@@ -55,11 +51,11 @@ public class UI {
 	private Button startButton;   // Button to initiate the path finding
 	private Button[] mazeButtons; // Buttons to change the displayed maze.
 	private int selectedMaze;
+	private String debugString;
 	
-	public UI(Grid environment, Main program) {
+	public UI(Grid environment) {
 		font = new BitmapFont();
 		this.environment = environment;
-		this.program = program;
 		
 		pfMode = PathFind.ForwardAStar;
 		tbMode = TieBreak.Smaller;
@@ -68,6 +64,7 @@ public class UI {
 		pfButtons[PathFind.ForwardAStar.ordinal()] = new Button("Repeated Forward A*", true);
 		pfButtons[PathFind.BackwardAStar.ordinal()] = new Button("Repeated Backward A*", false);
 		pfButtons[PathFind.AdaptiveAStar.ordinal()] = new Button("Adaptive A*", false);
+		pfButtons[PathFind.DStarLite.ordinal()] = new Button("D* Lite", false);
 		
 		tbButtons = new Button[TieBreak.values().length];
 		tbButtons[TieBreak.Smaller.ordinal()] = new Button("Smaller g-Values", true);
@@ -81,6 +78,8 @@ public class UI {
 		mazeButtons[2] = new Button(">", false);
 		selectedMaze = 0;
 		loadMaze(selectedMaze);
+		
+		debugString = "(Left Click) Place Agent\n(Right Click) Place Goal";
 	}
 	
 	/**
@@ -132,14 +131,14 @@ public class UI {
 			
 			//Start Pathfinding Button
 			if (isButtonClicked(startButton)) {
-				/*if (!environment.doesObjectExist(ObjectType.AGENT)
+				if (!environment.doesObjectExist(ObjectType.AGENT)
 				 || !environment.doesObjectExist(ObjectType.GOAL)) {
-					program.showBasicDialog("Please first place both an agent (Left-Click) and Goal (Right-Click) into the maze.");
+					environment.getMain().showBasicDialog("ERROR: Agent and/or Goal is\nmissing! Please add them\ninto the grid.\n \n(Left Click) Place Agent\n(Right Click) Place Goal");
 				} else {
 					
-				}*/
+				}
 				environment.clearPath();
-				GridObject g = environment.objects[environment.agentPoint.x][environment.agentPoint.y];
+				GridObject g = environment.getObjectAtCell(new Point(environment.agentPoint.x,environment.agentPoint.y));
 				if (g instanceof Agent) {
 					Agent a = (Agent)g;
 					a.pathFind();
@@ -160,9 +159,6 @@ public class UI {
 				else
 					selectedMaze += 1;
 				loadMaze(selectedMaze);
-			}
-			if (isButtonClicked(mazeButtons[1])) { //Select Maze #
-				
 			}
 		}
 	}
@@ -199,9 +195,10 @@ public class UI {
 		float buttonHeight = 0.05f;
 		float buttonWidth = 0.8f;
 		float pfHeight = 0.95f;
-		float tbHeight = 0.65f;
-		float startHeight = 0.1f+buttonHeight+buttonSpacing;
-		float mazeHeight = 0.1f;
+		float tbHeight = 0.6f;
+		float debugHeight = 0.4f;
+		float startHeight = 0.05f+buttonHeight+buttonSpacing;
+		float mazeHeight = 0.05f;
 		font.setColor(0, 0, 0, 1);
 		
 		//Pathfinding section & buttons
@@ -223,6 +220,9 @@ public class UI {
 			tbButtons[i].pixelSize.y = (int)(pixelSize.y*buttonHeight);
 			drawButton(tbButtons[i], render, batch, font);
 		}
+		
+		//UI Console Text
+		drawTextCentered(font, batch, "Information:\n \n"+debugString, pixelPos.x + pixelSize.x/2f, pixelPos.y + pixelSize.y*debugHeight);
 		
 		//Start Button
 		startButton.pixelPos.x = (int)(pixelPos.x+pixelSize.x*((1-buttonWidth)/2f));
@@ -257,9 +257,15 @@ public class UI {
 	 * @param x X-position on the screen.
 	 * @param y Y-position on the screen.
 	 */
-	private void drawTextCentered(BitmapFont font, SpriteBatch batch, CharSequence str, float x, float y) {
-		TextBounds bounds = font.getBounds(str);
-		font.draw(batch, str, x-bounds.width/2f, y+bounds.height/2f);
+	private void drawTextCentered(BitmapFont font, SpriteBatch batch, String str, float x, float y) {
+		String[] lines = str.split("\n");
+		TextBounds bounds = font.getBounds("A");
+		float lineHeight = bounds.height*1.75f;
+		
+		for (int i=0; i<lines.length; i++) {
+			bounds = font.getBounds(lines[i]);
+			font.draw(batch, lines[i], x-bounds.width/2f, y+lineHeight/2f-lineHeight*i);
+		}
 	}
 	
 	/**
@@ -301,6 +307,10 @@ public class UI {
 			return true;
 		else
 			return false;
+	}
+	
+	public void setUIDebugString(String message) {
+		debugString = message;
 	}
 	
 }

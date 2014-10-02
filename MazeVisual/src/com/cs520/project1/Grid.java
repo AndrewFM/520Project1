@@ -5,8 +5,10 @@ import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
@@ -21,12 +23,14 @@ public class Grid {
 	};
 	
 	public Point cellDim;		   	 	 // Dimensions of the grid.
-	public GridObject[][] objects;  	 // All objects active on the grid.
-	public CellNode[][] cellNodes;		// Array of cell nodes
+	private GridObject[][] objects;  	 // All objects active on the grid.
+	private CellNode[][] cellNodes;		 // Array of cell nodes
 	private ArrayList<CellNode> pathVisual; // Visualization of a path on the grid.
 	private Main program;			 	 // Reference to the main class.
 	public Point agentPoint;			 // Cell containing agent.
 	public Point goalPoint;				 // Cell containing goal.
+	private Texture visitedTexture;
+	private Sprite visitedSprite;
 	
 	/**
 	 * @param cellDim The size of the grid in columns (x) and rows (y).
@@ -46,6 +50,12 @@ public class Grid {
 		pathVisual = new ArrayList<CellNode>();
 		agentPoint = new Point(0,0);
 		goalPoint = new Point(0,0);
+		
+		visitedTexture = new Texture(Gdx.files.internal("data/visited.png"));
+		visitedTexture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+		visitedSprite = new Sprite(visitedTexture);
+		visitedSprite.setOrigin(0, 0);
+		
 		clearGrid();
 	}
 	
@@ -230,19 +240,23 @@ public class Grid {
 	public void render(OrthographicCamera camera, ShapeRenderer render, SpriteBatch batch, Point pixelPos, Point pixelSize) {
 		update(pixelPos, pixelSize);
 		
-		//Pass 1: Render the Objects
+		//Pass 1: Render the Objects & Visited Cells
 		Point cellSize = new Point(pixelSize.x/cellDim.x,pixelSize.y/cellDim.y);
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 		
 		for(int i=0;i<cellDim.x;i++) {
 			for(int j=0;j<cellDim.y;j++) {				
+				//Render Visited Cells
+				if (cellNodes[i][j].fValue != 0) {
+					visitedSprite.setSize(cellSize.x, cellSize.y);
+					visitedSprite.setPosition(pixelPos.x+cellSize.x*i, pixelPos.y+cellSize.y*j);
+					visitedSprite.draw(batch);
+				}
+				
+				//Render Object Images
 				if (objects[i][j] != null)
 					objects[i][j].render(batch, new Point(pixelPos.x+cellSize.x*i,pixelPos.y+cellSize.y*j), cellSize);
-				//TODO
-				//if (cellNodes[i][j].fValue != 0) {
-				//	render.rect(pixelPos.x+cellSize.x*i,pixelPos.y+cellSize.y*j, cellSize.x, cellSize.y);
-				//}
 			}
 		}
 		batch.end();
@@ -252,7 +266,7 @@ public class Grid {
 		render.setProjectionMatrix(camera.combined);
 		render.begin(ShapeType.Line);
 		
-		render.setColor(0.92f, 0.92f, 0.92f, 1f);
+		render.setColor(0.95f, 0.95f, 0.95f, 1f);
 		for(int i=0; i<cellDim.x; i++) {
 				//Vertical Grid Lines
 				render.line(pixelPos.x+cellSize.x*i, 
@@ -299,9 +313,6 @@ public class Grid {
 						p.setLocation(i,row);
 						addObjectToCell(p, ObjectType.WALL);
 					}
-					
-					cellNodes[i][row].position.setLocation(i, row);
-					cellNodes[i][row].setGValue(0);
 				}
 				row += 1;
 				if (row == cellDim.y)
@@ -326,6 +337,7 @@ public class Grid {
 				objects[i][j] = null;
 				cellNodes[i][j].reset();
 			}
+		clearPath();
 	}	
 	
 	/**
@@ -363,6 +375,13 @@ public class Grid {
 		pathVisual.remove(pathVisual.size()-1);
 		
 		return q;
+	}
+	
+	/**
+	 * @return Number of nodes defined in the path.
+	 */
+	public int getPathLength() {
+		return pathVisual.size();
 	}
 	
 	/**

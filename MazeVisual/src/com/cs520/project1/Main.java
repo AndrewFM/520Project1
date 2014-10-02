@@ -3,14 +3,13 @@ import java.awt.Point;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.cs520.project1.Grid.ObjectType;
 import com.cs520.project1.UI.PathFind;
 import com.cs520.project1.UI.TieBreak;
 
@@ -21,7 +20,7 @@ public class Main implements ApplicationListener {
 	private ShapeRenderer shapeRenderer;
 	private Grid environment;
 	private UI userInterface;
-	private Stage stage;
+	public Texture[] objectImages;
 	
 	public static final int NUMBER_OF_MAZES = 50;
 
@@ -31,18 +30,26 @@ public class Main implements ApplicationListener {
 		camera = new OrthographicCamera(windowSize.x,windowSize.y);
 		camera.translate(windowSize.x/2f, windowSize.y/2f);
 		camera.update();
-		stage = new Stage();
 		batch = new SpriteBatch();
 		shapeRenderer = new ShapeRenderer();
+		
+		objectImages = new Texture[ObjectType.values().length];
+		objectImages[ObjectType.AGENT.ordinal()] = new Texture(Gdx.files.internal("data/agent.png"));
+		objectImages[ObjectType.GOAL.ordinal()] = new Texture(Gdx.files.internal("data/goal.png"));
+		objectImages[ObjectType.WALL.ordinal()] = new Texture(Gdx.files.internal("data/wall.png"));
+		for(int i=0; i<ObjectType.values().length; i++) {
+			if (i != ObjectType.VACANT.ordinal())
+				objectImages[i].setFilter(TextureFilter.Linear, TextureFilter.Linear);
+		}
+		
 		environment = new Grid(new Point(101,101), this);
-		userInterface = new UI(environment, this);
+		userInterface = new UI(environment);
 	}
 
 	@Override
 	public void dispose() {
 		batch.dispose();
 		shapeRenderer.dispose();
-		stage.dispose();
 	}
 	
 	@Override
@@ -51,7 +58,6 @@ public class Main implements ApplicationListener {
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);		
 		environment.render(camera, shapeRenderer, batch, new Point(10,30), new Point(800,800));
 		userInterface.render(camera, shapeRenderer, batch, new Point(730,0), new Point(Gdx.graphics.getWidth()-730,Gdx.graphics.getHeight())); 
-		stage.draw();
 	}
 	
 	/**
@@ -68,13 +74,12 @@ public class Main implements ApplicationListener {
 		return userInterface.pfMode;
 	}
 	
-	//TODO
 	public void showBasicDialog(String message) {
 		/*Skin skin = new Skin();
 		Dialog dialog = new Dialog("...", skin) {
 			protected void result (Object object) { }
 		}.text(message).button("Okay",true).key(Keys.ENTER, true).show(stage);*/
-		System.out.println(message);
+		userInterface.setUIDebugString(message);
 	}
 	
 	@Override

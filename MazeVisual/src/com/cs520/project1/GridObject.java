@@ -1,9 +1,7 @@
 package com.cs520.project1;
 import java.awt.Point;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -13,13 +11,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
  */
 public abstract class GridObject {
 	private Sprite sprite;
-	private Texture texture;
 	private Grid.ObjectType type;
 	
-	public GridObject(Grid.ObjectType type, String imagePath) {
-		texture = new Texture(Gdx.files.internal(imagePath));
-		texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-		sprite = new Sprite(texture);
+	public GridObject(Grid.ObjectType type, Texture tex) {
+		//texture = new Texture(Gdx.files.internal(imagePath));
+		//texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+		sprite = new Sprite(tex);
 		this.type = type;
 	}
 	

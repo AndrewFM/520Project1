@@ -4,7 +4,7 @@ import java.awt.Point;
 
 import com.cs520.project1.UI.TieBreak;
 
-public class CellNode implements Comparable {
+public class CellNode implements Comparable<CellNode> {
 
 	public Point position;
 	public int gValue;
@@ -67,7 +67,7 @@ public class CellNode implements Comparable {
 		return false;
 	}
 	
-	public int compareTo(Object cn) {		
+	public int compareTo(CellNode cn) {		
 		//F-Values are Equal
 		if (this.fValue == ((CellNode)cn).fValue) {
 			//Larger G-Value Tie Breaking
