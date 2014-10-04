@@ -188,6 +188,13 @@ public class Agent extends GridObject {
 		}
 		
 		for(int i=startPath;i*pathIncrement<=endPath;i+=pathIncrement) {
+			//Look at cells adjacent to us, and update action costs if walls are found.
+			for(Point a : actionList) {
+				CellNode adj = grid.getCellProperties(new Point(state.position.x+a.x,state.position.y+a.y));
+				if (grid.getObjectTypeAtCell(adj.position) == ObjectType.WALL)
+					adj.actionCost = Integer.MAX_VALUE;
+			}
+			
 			CellNode moveTo = remPath.get(i);
 			if (grid.getObjectTypeAtCell(moveTo.position) == ObjectType.WALL) {
 				//Wall detected in path. Update action costs and exit.
