@@ -113,29 +113,49 @@ public class UI {
 	public void update(Point pixelPos, Point pixelSize) {
 		//Handle Mouse Actions		
 		if (Gdx.input.justTouched()) {
-			//PathFind Buttons
-			for(int i=0;i<pfButtons.length; i++) {
-				if (isButtonClicked(pfButtons[i])) {
-					pfMode = PathFind.values()[i];
-					pfButtons[i].active = true;
-					for(int j=0;j<pfButtons.length; j++) {
-						if (i != j)
-							pfButtons[j].active = false;
-					}
-					break;
-				}
-			}
+			Agent a = environment.getAgent();
 			
-			//TieBreak Buttons
-			for(int i=0;i<tbButtons.length; i++) {
-				if (isButtonClicked(tbButtons[i])) {
-					tbMode = TieBreak.values()[i];
-					tbButtons[i].active = true;
-					for(int j=0;j<tbButtons.length; j++) {
-						if (i != j)
-							tbButtons[j].active = false;
+			if (a == null || a.started == false) {
+				//PathFind Buttons
+				for(int i=0;i<pfButtons.length; i++) {
+					if (isButtonClicked(pfButtons[i])) {
+						pfMode = PathFind.values()[i];
+						pfButtons[i].active = true;
+						for(int j=0;j<pfButtons.length; j++) {
+							if (i != j)
+								pfButtons[j].active = false;
+						}
+						break;
 					}
-					break;
+				}
+				
+				//TieBreak Buttons
+				for(int i=0;i<tbButtons.length; i++) {
+					if (isButtonClicked(tbButtons[i])) {
+						tbMode = TieBreak.values()[i];
+						tbButtons[i].active = true;
+						for(int j=0;j<tbButtons.length; j++) {
+							if (i != j)
+								tbButtons[j].active = false;
+						}
+						break;
+					}
+				}
+				
+				//Maze Buttons
+				if (isButtonClicked(mazeButtons[0])) { //Previous
+					if (selectedMaze == 0)
+						selectedMaze = Main.NUMBER_OF_MAZES-1;
+					else
+						selectedMaze -= 1;
+					loadMaze(selectedMaze);
+				}
+				if (isButtonClicked(mazeButtons[2])) { //Next
+					if (selectedMaze == Main.NUMBER_OF_MAZES-1)
+						selectedMaze = 0;
+					else
+						selectedMaze += 1;
+					loadMaze(selectedMaze);
 				}
 			}
 			
@@ -158,30 +178,15 @@ public class UI {
 				 || !environment.doesObjectExist(ObjectType.GOAL)) {
 					environment.getMain().showBasicDialog("ERROR: Agent and/or Goal is\nmissing! Please add them\ninto the grid.\n \n"+getDefaultDebugString());
 				} else {
-					
-				}
-				environment.resetPathFind();
-				GridObject g = environment.getObjectAtCell(new Point(environment.agentPoint.x,environment.agentPoint.y));
-				if (g instanceof Agent) {
-					Agent a = (Agent)g;
-					a.pathFind();
-				}
-			}
-			
-			//Maze Buttons
-			if (isButtonClicked(mazeButtons[0])) { //Previous
-				if (selectedMaze == 0)
-					selectedMaze = Main.NUMBER_OF_MAZES-1;
-				else
-					selectedMaze -= 1;
-				loadMaze(selectedMaze);
-			}
-			if (isButtonClicked(mazeButtons[2])) { //Next
-				if (selectedMaze == Main.NUMBER_OF_MAZES-1)
-					selectedMaze = 0;
-				else
-					selectedMaze += 1;
-				loadMaze(selectedMaze);
+					if (a.started) {
+						aniMode = AnimationSetting.Disabled;
+						aniButtons[AnimationSetting.Enabled.ordinal()].active = false;
+						aniButtons[AnimationSetting.Disabled.ordinal()].active = true;
+					} else {
+						environment.resetPathFind();
+						a.pathFind();
+					}
+				}				
 			}
 		}
 	}
