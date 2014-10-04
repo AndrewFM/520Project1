@@ -50,14 +50,21 @@ public class CellNode implements Comparable<CellNode> {
 		return (Math.abs(position.x-goalNode.position.x)+Math.abs(position.y-goalNode.position.y));
 	}
 	
+	public void calculateAdaptiveFValue(CellNode goalNode) {
+		hValue = goalNode.gValue-gValue;
+		fValue = Main.addNoOverflow(gValue, hValue);
+	}
+	
 	public void calculateFValue(CellNode goalNode){
-		hValue=calculateHValue(goalNode);
+		//Only calculate h-value if it hasn't already been calculated.
+		if (hValue == -1)
+			hValue=calculateHValue(goalNode);
 		fValue = Main.addNoOverflow(gValue,hValue);
 	}
 	
 	public void reset() {
 		gValue = Integer.MAX_VALUE;
-		hValue = 0;
+		hValue = -1;
 		fValue = Integer.MAX_VALUE;
 		search = 0;
 		actionCost = 1;

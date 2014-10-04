@@ -19,6 +19,7 @@ public class Agent extends GridObject {
 	private Point[] actionList;
 	private int visitedCount = 0; //Keep track of how many nodes visited, for debugging.
 	private BinaryHeap<CellNode> openList;
+	private ArrayList<CellNode> closedList;
 	private CellNode state;
 	private CellNode start;
 	private CellNode goal;
@@ -38,7 +39,7 @@ public class Agent extends GridObject {
 	/**
 	 * Initiate a path finding routine for the Agent.
 	 */
-	public void pathFind() {
+	public void startPathFind() {
 		visitedCount = 0;
 		counter = 0;
 		openList = new BinaryHeap<CellNode>();
@@ -46,6 +47,10 @@ public class Agent extends GridObject {
 		start = state;
 		goal = grid.getCellProperties(grid.goalPoint);
 		grid.fullTraversedPath.add(start);
+		
+		if (grid.getMain().getPathFindingAlgorithm() == PathFind.AdaptiveAStar)
+			closedList = new ArrayList<CellNode>();
+		
 		started = true;
 	}
 	
@@ -57,16 +62,18 @@ public class Agent extends GridObject {
 					break;
 						
 				case BackwardAStar:
+					//TODO: Backwards A* is sometimes really laggy. Check for bugs?
 					RepeatedAStar();
 					break;
 						
 				case AdaptiveAStar:
-					//TODO: Implement Adaptive A*
+					RepeatedAStar();
 					break;
 					
 				case DStarLite:
 					//TODO: Implement D* Lite. We're allowed to use pseudocode from
 					//      the web for this, but we should cite source.
+					started = false;
 					break;
 			}
 			if (state.equals(goal))
@@ -95,7 +102,7 @@ public class Agent extends GridObject {
 			counter += 1;
 			
 			if (grid.getMain().getPathFindingAlgorithm() == PathFind.BackwardAStar) {
-				//Swap goal & state before running Backwards A*
+				//Backward A*: Swap goal & state before running path find.
 				CellNode rem = goal;
 				goal = state;
 				state = rem;
@@ -111,11 +118,20 @@ public class Agent extends GridObject {
 			openList.clear();			
 			openList.insert(state);
 			
+			if (grid.getMain().getPathFindingAlgorithm() == PathFind.AdaptiveAStar)
+				closedList.clear();
+			
 			AStar();
 			
 			if (openList.isEmpty()) {
 				endAStar(false);
 				return;
+			}
+			
+			if (grid.getMain().getPathFindingAlgorithm() == PathFind.AdaptiveAStar) {
+				//Adaptive A*: Update h-values for all expanded nodes.
+				for(CellNode exp : closedList)
+					exp.calculateAdaptiveFValue(goal);
 			}
 			
 			tracePathAndMove();
@@ -129,6 +145,9 @@ public class Agent extends GridObject {
 		while (!goalFound) {
 			CellNode minInOpen = openList.peek();
 			openList.remove(minInOpen);
+			
+			if (grid.getMain().getPathFindingAlgorithm() == PathFind.AdaptiveAStar)
+				closedList.add(minInOpen); //Keep track of all expanded nodes in Adaptive A* so we can update h-values later.
 			
 			for(Point a : actionList) {
 				CellNode succ = grid.getCellProperties(new Point(minInOpen.position.x+a.x, minInOpen.position.y+a.y));
@@ -174,7 +193,7 @@ public class Agent extends GridObject {
 		}
 		
 		if (grid.getMain().getPathFindingAlgorithm() == PathFind.BackwardAStar) {
-			//Swap goal & state back to normal before moving along path.
+			//Backward A*: Path traced from start to goal. Swap goal & state back to normal before moving along path.
 			CellNode rem = goal;
 			goal = state;
 			state = rem;
@@ -182,6 +201,7 @@ public class Agent extends GridObject {
 			endPath = remPath.size()-1;
 			pathIncrement = 1;
 		} else {
+			//Forward A*: Path traced from goal to start.
 			startPath = remPath.size()-2;
 			endPath = 0;
 			pathIncrement = -1;
@@ -191,7 +211,7 @@ public class Agent extends GridObject {
 			//Look at cells adjacent to us, and update action costs if walls are found.
 			for(Point a : actionList) {
 				CellNode adj = grid.getCellProperties(new Point(state.position.x+a.x,state.position.y+a.y));
-				if (grid.getObjectTypeAtCell(adj.position) == ObjectType.WALL)
+				if (adj != null && grid.getObjectTypeAtCell(adj.position) == ObjectType.WALL)
 					adj.actionCost = Integer.MAX_VALUE;
 			}
 			

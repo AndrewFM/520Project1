@@ -50,8 +50,8 @@ public class Grid {
 		}
 		shortestPresumedPath = new ArrayList<CellNode>();
 		fullTraversedPath = new ArrayList<CellNode>();
-		agentPoint = new Point(0,0);
-		goalPoint = new Point(0,0);
+		agentPoint = new Point(-1,-1);
+		goalPoint = new Point(-1,-1);
 		
 		visitedTexture = new Texture(Gdx.files.internal("data/visited.png"));
 		visitedTexture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
@@ -139,13 +139,15 @@ public class Grid {
 			case WALL:
 				objects[cell.x][cell.y] = new Wall(this); break;
 			case AGENT:
-				clearGridObject(ObjectType.AGENT);
+				if (getObjectTypeAtCell(agentPoint) == ObjectType.AGENT)
+					objects[agentPoint.x][agentPoint.y] = null;
 				objects[cell.x][cell.y] = new Agent(this);
 				agentPoint.x = cell.x;
 				agentPoint.y = cell.y;
 				break;
 			case GOAL:
-				clearGridObject(ObjectType.GOAL);
+				if (getObjectTypeAtCell(goalPoint) == ObjectType.GOAL)
+					objects[goalPoint.x][goalPoint.y] = null;
 				objects[cell.x][cell.y] = new Goal(this);
 				goalPoint.x = cell.x;
 				goalPoint.y = cell.y;
@@ -272,7 +274,7 @@ public class Grid {
 		batch.end();
 		
 		//Pass 2: Render the Grid
-		Gdx.gl10.glLineWidth(1);
+		Gdx.gl10.glLineWidth(1f);
 		render.setProjectionMatrix(camera.combined);
 		render.begin(ShapeType.Line);
 		
@@ -294,14 +296,21 @@ public class Grid {
 		}
 		
 		//Lastly: Render the Paths
-		Gdx.gl10.glLineWidth(2);
+		Gdx.gl10.glLineWidth(2f);
 		render.setColor(1f, 0f, 0f, 1f);
 		renderPath(shortestPresumedPath,render, pixelPos, pixelSize);
 		
 		if (a != null && !a.started) {
 			render.setColor(0f, 0f, 1f, 1f);
 			renderPath(fullTraversedPath,render, pixelPos, pixelSize);
+			
+			render.setColor(1f, 0f, 0f, 1f);
+			if (agentPoint.x >= 0)
+				render.circle(pixelPos.x+cellSize.x*agentPoint.x+cellSize.x/2f, pixelPos.y+cellSize.y*agentPoint.y+cellSize.y/2f, 15f);
+			if (goalPoint.x >= 0)
+				render.circle(pixelPos.x+cellSize.x*goalPoint.x+cellSize.x/2f, pixelPos.y+cellSize.y*goalPoint.y+cellSize.y/2f, 15f);
 		}
+		
 		render.end();	
 	}
 	
@@ -352,20 +361,10 @@ public class Grid {
 				objects[i][j] = null;
 				cellNodes[i][j].reset();
 			}
+		agentPoint.setLocation(-1,-1);
+		goalPoint.setLocation(-1,-1);
 		resetPathFind();
 	}	
-	
-	/**
-	 * Removes all GridObjects of a certain type from the environment.
-	 * @param type The type of object to search for.
-	 */
-	private void clearGridObject(ObjectType type) {
-		for(int i=0;i<cellDim.x;i++)
-			for(int j=0;j<cellDim.y;j++) {
-				if (objects[i][j] != null && objects[i][j].getType() == type)
-					objects[i][j] = null;
-			}
-	}
 	
 	/**
 	 * Removes the path from the grid, and clears data for a fresh pathfinding execution.

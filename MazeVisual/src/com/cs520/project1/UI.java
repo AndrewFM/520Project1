@@ -184,7 +184,7 @@ public class UI {
 						aniButtons[AnimationSetting.Disabled.ordinal()].active = true;
 					} else {
 						environment.resetPathFind();
-						a.pathFind();
+						a.startPathFind();
 					}
 				}				
 			}

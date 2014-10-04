@@ -27,7 +27,7 @@ public class MazeGen {
 
 		PrintWriter pw;
 		try {
-			pw = new PrintWriter("MazeFiles/Maze" + fileNo + ".txt");
+			pw = new PrintWriter("mazes/Maze" + fileNo + ".txt");
 
 			for (int i = 0; i < y; i++) {
 				// draw the north edge
@@ -55,7 +55,6 @@ public class MazeGen {
 
 			pw.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -106,7 +105,7 @@ public class MazeGen {
 		int y = args.length == 2 ? (Integer.parseInt(args[1])) : 50;
 		
 		MazeGen maze;
-		for(int i = 0; i < 50; i++){
+		for(int i = 0; i < 50; i+=2){
 			maze = new MazeGen(x, y);
 			maze.display(i);
 		}
