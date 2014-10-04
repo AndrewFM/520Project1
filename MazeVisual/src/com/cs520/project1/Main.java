@@ -10,8 +10,7 @@ import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.cs520.project1.Grid.ObjectType;
-import com.cs520.project1.UI.PathFind;
-import com.cs520.project1.UI.TieBreak;
+import com.cs520.project1.UI.*;
 
 
 public class Main implements ApplicationListener {
@@ -74,12 +73,33 @@ public class Main implements ApplicationListener {
 		return userInterface.pfMode;
 	}
 	
+	/**
+	 * @return Whether to animate the pathfinding sequence or not.
+	 */
+	public AnimationSetting getAnimationSettings() {
+		return userInterface.aniMode;
+	}
+	
 	public void showBasicDialog(String message) {
 		/*Skin skin = new Skin();
 		Dialog dialog = new Dialog("...", skin) {
 			protected void result (Object object) { }
 		}.text(message).button("Okay",true).key(Keys.ENTER, true).show(stage);*/
 		userInterface.setUIDebugString(message);
+	}
+	
+	/**
+	 * Add two integers together without them overflowing if one or both
+	 * of them is equal to Integer.MAX_VALUE.
+	 * @param val1 First value to add.
+	 * @param val2 Second value to add.
+	 * @return The sum of the two numbers.
+	 */
+	public static int addNoOverflow(int val1, int val2) {
+		if (val1 == Integer.MAX_VALUE || val2 == Integer.MAX_VALUE)
+			return Integer.MAX_VALUE;
+		else
+			return val1 + val2;
 	}
 	
 	@Override

@@ -11,6 +11,7 @@ public class CellNode implements Comparable<CellNode> {
 	public int fValue;
 	public int hValue;
 	public int search;
+	public int actionCost;
 	public CellNode parentOnPath;
 	private Main program;
 	
@@ -25,7 +26,7 @@ public class CellNode implements Comparable<CellNode> {
 		reset();
 		gValue = g;
 		hValue = h;
-		fValue = g+h;
+		fValue = Main.addNoOverflow(gValue,hValue);
 		this.program = program;
 	}
 	
@@ -37,11 +38,12 @@ public class CellNode implements Comparable<CellNode> {
 		fValue = gValue+fValue;
 		search = c.search;
 		parentOnPath = c.parentOnPath;
+		actionCost = c.actionCost;
 	}
 	
 	public void setGValue(int g) {
 		gValue = g;
-		fValue = gValue+hValue;
+		fValue = Main.addNoOverflow(gValue,hValue);
 	}
 
 	private int calculateHValue(CellNode goalNode) {
@@ -50,14 +52,15 @@ public class CellNode implements Comparable<CellNode> {
 	
 	public void calculateFValue(CellNode goalNode){
 		hValue=calculateHValue(goalNode);
-		fValue=gValue+hValue;
+		fValue = Main.addNoOverflow(gValue,hValue);
 	}
 	
 	public void reset() {
-		gValue = 0;
+		gValue = Integer.MAX_VALUE;
 		hValue = 0;
-		fValue = 0;
+		fValue = Integer.MAX_VALUE;
 		search = 0;
+		actionCost = 1;
 		parentOnPath = null;
 	}
 	

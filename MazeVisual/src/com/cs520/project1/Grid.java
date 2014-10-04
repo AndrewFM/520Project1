@@ -22,15 +22,16 @@ public class Grid {
 		AGENT, WALL, GOAL, VACANT
 	};
 	
-	public Point cellDim;		   	 	 // Dimensions of the grid.
-	private GridObject[][] objects;  	 // All objects active on the grid.
-	private CellNode[][] cellNodes;		 // Array of cell nodes
-	private ArrayList<CellNode> pathVisual; // Visualization of a path on the grid.
-	private Main program;			 	 // Reference to the main class.
-	public Point agentPoint;			 // Cell containing agent.
-	public Point goalPoint;				 // Cell containing goal.
+	public Point cellDim;		   	 	   // Dimensions of the grid.
+	private GridObject[][] objects;  	   // All objects active on the grid.
+	private CellNode[][] cellNodes;		   // Array of cell nodes
+	private Main program;			 	   // Reference to the main class.
+	public Point agentPoint;			   // Cell containing agent.
+	public Point goalPoint;				   // Cell containing goal.
 	private Texture visitedTexture;
 	private Sprite visitedSprite;
+	public ArrayList<CellNode> shortestPresumedPath; // Visualization of shortest path to goal at current time step.
+	public ArrayList<CellNode> fullTraversedPath;	 // Visualization of agent's full environment traversal so far.
 	
 	/**
 	 * @param cellDim The size of the grid in columns (x) and rows (y).
@@ -47,7 +48,8 @@ public class Grid {
 				cellNodes[i][j] = new CellNode(getMain(),p);
 			}
 		}
-		pathVisual = new ArrayList<CellNode>();
+		shortestPresumedPath = new ArrayList<CellNode>();
+		fullTraversedPath = new ArrayList<CellNode>();
 		agentPoint = new Point(0,0);
 		goalPoint = new Point(0,0);
 		
@@ -111,12 +113,11 @@ public class Grid {
 	 * 
 	 * @param cell The (col,row) coordinate of the cell to check.
 	 * @return The CellNode reference at that position. If an invalid
-	 * 		   cell is specified, this will return a CellNode reference
-	 * 		   with a very large f-value.
+	 * 		   cell is specified, this will return null.
 	 */
 	public CellNode getCellProperties(Point cell) {
 		if (!isValidCell(cell,false))
-			return new CellNode(getMain(), cell, cellDim.x*cellDim.y, cellDim.x*3);
+			return null;
 		else
 			return cellNodes[cell.x][cell.y];
 	}
@@ -224,6 +225,9 @@ public class Grid {
 			}
 		}
 		
+		Agent a = getAgent();
+		if (a != null)
+			a.update();		
 	}
 	
 	/**
@@ -241,6 +245,7 @@ public class Grid {
 		update(pixelPos, pixelSize);
 		
 		//Pass 1: Render the Objects & Visited Cells
+		Agent a = getAgent();
 		Point cellSize = new Point(pixelSize.x/cellDim.x,pixelSize.y/cellDim.y);
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
@@ -248,15 +253,20 @@ public class Grid {
 		for(int i=0;i<cellDim.x;i++) {
 			for(int j=0;j<cellDim.y;j++) {				
 				//Render Visited Cells
-				if (cellNodes[i][j].fValue != 0) {
+				if (cellNodes[i][j].fValue != Integer.MAX_VALUE) {
 					visitedSprite.setSize(cellSize.x, cellSize.y);
 					visitedSprite.setPosition(pixelPos.x+cellSize.x*i, pixelPos.y+cellSize.y*j);
 					visitedSprite.draw(batch);
 				}
 				
 				//Render Object Images
-				if (objects[i][j] != null)
-					objects[i][j].render(batch, new Point(pixelPos.x+cellSize.x*i,pixelPos.y+cellSize.y*j), cellSize);
+				if (objects[i][j] != null) {
+					boolean wallDisplay = true;
+					if (a != null && a.started && getObjectTypeAtCell(new Point(i,j)) == ObjectType.WALL && getCellProperties(new Point(i,j)).actionCost != Integer.MAX_VALUE)
+						wallDisplay = false;
+					if (wallDisplay)
+						objects[i][j].render(batch, new Point(pixelPos.x+cellSize.x*i,pixelPos.y+cellSize.y*j), cellSize);
+				}
 			}
 		}
 		batch.end();
@@ -283,11 +293,16 @@ public class Grid {
 							pixelPos.y+cellSize.y*i);
 		}
 		
-		//Lastly: Render the Path
+		//Lastly: Render the Paths
 		Gdx.gl10.glLineWidth(2);
 		render.setColor(1f, 0f, 0f, 1f);
-		renderPath(render, pixelPos, pixelSize);
-		render.end();		
+		renderPath(shortestPresumedPath,render, pixelPos, pixelSize);
+		
+		if (a != null && !a.started) {
+			render.setColor(0f, 0f, 1f, 1f);
+			renderPath(fullTraversedPath,render, pixelPos, pixelSize);
+		}
+		render.end();	
 	}
 	
 	/**
@@ -337,7 +352,7 @@ public class Grid {
 				objects[i][j] = null;
 				cellNodes[i][j].reset();
 			}
-		clearPath();
+		resetPathFind();
 	}	
 	
 	/**
@@ -353,42 +368,11 @@ public class Grid {
 	}
 	
 	/**
-	 * Adds a cell to the path, which will be visualized on the grid. The
-	 * lines will be connected in the order that the cells are added to
-	 * the path.
-	 * 
-	 * @param cell The (col,row) coordinates of the cell to add.
+	 * Removes the path from the grid, and clears data for a fresh pathfinding execution.
 	 */
-	public void addCellToPath(CellNode cell) {
-		if (!isValidCell(cell.position,true))
-			return;
-		pathVisual.add(cell);
-	}
-	
-	/**
-	 * Removes the most recently added cell from the path.
-	 * @return The cell that was removed.
-	 */
-	public CellNode popCellFromPath() {
-		CellNode p = pathVisual.get(pathVisual.size()-1);
-		CellNode q = new CellNode(p);
-		pathVisual.remove(pathVisual.size()-1);
-		
-		return q;
-	}
-	
-	/**
-	 * @return Number of nodes defined in the path.
-	 */
-	public int getPathLength() {
-		return pathVisual.size();
-	}
-	
-	/**
-	 * Removes the path from the grid, and clears it to a blank slate.
-	 */
-	public void clearPath() {
-		pathVisual.clear();
+	public void resetPathFind() {
+		shortestPresumedPath.clear();
+		fullTraversedPath.clear();
 		for(int i=0;i<cellDim.x;i++) {
 			for(int j=0;j<cellDim.y;j++) {
 				cellNodes[i][j].reset();
@@ -404,6 +388,17 @@ public class Grid {
 	}
 	
 	/**
+	 * @return The agent's object if it exists on the grid, null otherwise.
+	 */
+	public Agent getAgent() {
+		Object o = getObjectAtCell(agentPoint);
+		if (o instanceof Agent) {
+			return (Agent)o;
+		}
+		return null;
+	}
+	
+	/**
 	 * Draws the path on the grid, if one has been defined.
 	 * 
 	 * @param render    ShapeRenderer for drawing geometric shapes to the window.
@@ -412,7 +407,7 @@ public class Grid {
 	 * 				    grid, and is measured in pixels.
 	 * @param pixelSize The size in pixels of the drawn grid.
 	 */
-	private void renderPath(ShapeRenderer render, Point pixelPos, Point pixelSize) {
+	private void renderPath(ArrayList<CellNode> pathVisual, ShapeRenderer render, Point pixelPos, Point pixelSize) {
 		if (pathVisual.size() <= 1)
 			return;
 		

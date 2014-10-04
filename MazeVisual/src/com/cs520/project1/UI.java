@@ -25,6 +25,10 @@ public class UI {
 		Smaller, Larger
 	};
 	
+	public static enum AnimationSetting {
+		Enabled, Disabled
+	};
+	
 	/**
 	 * An interface button that can be clicked on.
 	 */
@@ -44,12 +48,14 @@ public class UI {
 	
 	private Grid environment;
 	private BitmapFont font;
-	public PathFind pfMode; 	  // Pathfinding Algorithm to use.
-	public TieBreak tbMode; 	  // Tie-breaking method to use.
-	private Button[] pfButtons;   // Group of buttons to pick pathfinding algo.
-	private Button[] tbButtons;   // Group of buttons to pick tie-breaking mode.
-	private Button startButton;   // Button to initiate the path finding
-	private Button[] mazeButtons; // Buttons to change the displayed maze.
+	public PathFind pfMode; 	     // Pathfinding Algorithm to use.
+	public TieBreak tbMode; 	     // Tie-breaking method to use.
+	public AnimationSetting aniMode; // Whether to animate the pathfinding sequence or not.
+	private Button[] pfButtons;      // Group of buttons to pick pathfinding algo.
+	private Button[] tbButtons;      // Group of buttons to pick tie-breaking mode.
+	private Button startButton;      // Button to initiate the path finding
+	private Button[] mazeButtons;    // Buttons to change the displayed maze.
+	private Button[] aniButtons;	 // Buttons to set the animation preferences.
 	private int selectedMaze;
 	private String debugString = "";
 	
@@ -59,6 +65,7 @@ public class UI {
 		
 		pfMode = PathFind.ForwardAStar;
 		tbMode = TieBreak.Smaller;
+		aniMode = AnimationSetting.Enabled;
 		
 		pfButtons = new Button[PathFind.values().length];
 		pfButtons[PathFind.ForwardAStar.ordinal()] = new Button("Repeated Forward A*", true);
@@ -69,6 +76,10 @@ public class UI {
 		tbButtons = new Button[TieBreak.values().length];
 		tbButtons[TieBreak.Smaller.ordinal()] = new Button("Smaller g-Values", true);
 		tbButtons[TieBreak.Larger.ordinal()] = new Button("Larger g-Values", false);
+		
+		aniButtons = new Button[AnimationSetting.values().length];
+		aniButtons[AnimationSetting.Enabled.ordinal()] = new Button("Animated", true);
+		aniButtons[AnimationSetting.Disabled.ordinal()] = new Button("Direct", false);
 		
 		startButton = new Button("Start Pathfinding", false);
 		
@@ -128,6 +139,19 @@ public class UI {
 				}
 			}
 			
+			//Animation Buttons
+			for(int i=0;i<aniButtons.length; i++) {
+				if (isButtonClicked(aniButtons[i])) {
+					aniMode = AnimationSetting.values()[i];
+					aniButtons[i].active = true;
+					for(int j=0;j<aniButtons.length; j++) {
+						if (i != j)
+							aniButtons[j].active = false;
+					}
+					break;
+				}
+			}
+			
 			//Start Pathfinding Button
 			if (isButtonClicked(startButton)) {
 				if (!environment.doesObjectExist(ObjectType.AGENT)
@@ -136,7 +160,7 @@ public class UI {
 				} else {
 					
 				}
-				environment.clearPath();
+				environment.resetPathFind();
 				GridObject g = environment.getObjectAtCell(new Point(environment.agentPoint.x,environment.agentPoint.y));
 				if (g instanceof Agent) {
 					Agent a = (Agent)g;
@@ -190,12 +214,13 @@ public class UI {
 		batch.setProjectionMatrix(camera.projection);
 		batch.begin();
 		
-		float buttonSpacing = 0.025f;
-		float buttonHeight = 0.05f;
+		float buttonSpacing = 0.018f;
+		float buttonHeight = 0.045f;
 		float buttonWidth = 0.8f;
 		float pfHeight = 0.95f;
-		float tbHeight = 0.6f;
-		float debugHeight = 0.4f;
+		float tbHeight = 0.65f;
+		float debugHeight = 0.45f;
+		float aniHeight = 0.05f+(buttonHeight+buttonSpacing)*2f;
 		float startHeight = 0.05f+buttonHeight+buttonSpacing;
 		float mazeHeight = 0.05f;
 		font.setColor(0, 0, 0, 1);
@@ -222,6 +247,15 @@ public class UI {
 		
 		//UI Console Text
 		drawTextCentered(font, batch, "Information:\n \n"+debugString, pixelPos.x + pixelSize.x/2f, pixelPos.y + pixelSize.y*debugHeight);
+		
+		//Animation Buttons
+		for(int i=0; i<aniButtons.length; i++) {
+			aniButtons[i].pixelPos.x = (int)(pixelPos.x+pixelSize.x*((1-buttonWidth)/2f)+pixelSize.x*buttonWidth*0.525f*(float)i);
+			aniButtons[i].pixelPos.y = (int)(pixelPos.y + pixelSize.y*aniHeight);
+			aniButtons[i].pixelSize.x = (int)(pixelSize.x*buttonWidth*0.475f);
+			aniButtons[i].pixelSize.y = (int)(pixelSize.y*buttonHeight);
+			drawButton(aniButtons[i], render, batch, font);
+		}
 		
 		//Start Button
 		startButton.pixelPos.x = (int)(pixelPos.x+pixelSize.x*((1-buttonWidth)/2f));

@@ -116,6 +116,13 @@ public class BinaryHeap<T extends Comparable<T>> {
 	}
 	
 	/**
+	 * Removes all elements from the heap.
+	 */
+	public void clear() {
+		heapArray.clear();
+	}
+	
+	/**
 	 * Determine if a node exists in the heap that has some value.
 	 * @param root The node to start search from.
 	 * @param value The value to search for.
