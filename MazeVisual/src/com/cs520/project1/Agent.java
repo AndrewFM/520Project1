@@ -12,6 +12,9 @@ import com.cs520.project1.UI.PathFind;
 /**
  * The Agent in the environment that needs to find a shortest path to the goal.
  * This is where all the pathfinding logic takes place.
+ * 
+ * D* Lite implementation based on psuedocode of (unoptimized) D* Lite from Koenig
+ * and Likhachev, Fast Replanning for Navigation in Unknown Terrain. [Fig 4]
  */
 public class Agent extends GridObject {
 
@@ -51,31 +54,23 @@ public class Agent extends GridObject {
 		if (grid.getMain().getPathFindingAlgorithm() == PathFind.AdaptiveAStar)
 			closedList = new ArrayList<CellNode>();
 		
+		if (grid.getMain().getPathFindingAlgorithm() == PathFind.DStarLite) {
+			goal.rhs = 0;
+			goal.calculateKey(state);
+			openList.insert(goal);
+		}
+		
 		started = true;
 	}
 	
 	public void update() {
 		while (started) {
-			switch (grid.getMain().getPathFindingAlgorithm()) {
-				case ForwardAStar:
-					RepeatedAStar();
-					break;
-						
-				case BackwardAStar:
-					//TODO: Backwards A* is sometimes really laggy. Check for bugs?
-					RepeatedAStar();
-					break;
-						
-				case AdaptiveAStar:
-					RepeatedAStar();
-					break;
-					
-				case DStarLite:
-					//TODO: Implement D* Lite. We're allowed to use pseudocode from
-					//      the web for this, but we should cite source.
-					started = false;
-					break;
-			}
+			//TODO: Implement D* Lite.
+			if (grid.getMain().getPathFindingAlgorithm() == PathFind.DStarLite)
+				DStar();
+			else
+				RepeatedAStar(); //TODO: Backwards A* is sometimes really slow. Check for bugs.
+			
 			if (state.equals(goal))
 				endAStar(true);
 				
@@ -96,11 +91,9 @@ public class Agent extends GridObject {
 	}
 	
 	/**
-	 * Implementation for Repeated Forward/Backward A*
+	 * Implementation for iterative A* methods.
 	 */
-	private void RepeatedAStar() {
-			counter += 1;
-			
+	private void RepeatedAStar() {			
 			if (grid.getMain().getPathFindingAlgorithm() == PathFind.BackwardAStar) {
 				//Backward A*: Swap goal & state before running path find.
 				CellNode rem = goal;
@@ -108,15 +101,16 @@ public class Agent extends GridObject {
 				state = rem;
 			}
 			
+			counter += 1;
 			goal.search = counter;
 			goal.setGValue(Integer.MAX_VALUE);	
 			goal.calculateFValue(goal);
 			state.search = counter;
 			state.setGValue(0);
 			state.calculateFValue(goal);
-			
-			openList.clear();			
-			openList.insert(state);
+				
+			openList.clear();
+			openList.insert(state);				
 			
 			if (grid.getMain().getPathFindingAlgorithm() == PathFind.AdaptiveAStar)
 				closedList.clear();
@@ -137,8 +131,23 @@ public class Agent extends GridObject {
 			tracePathAndMove();
 	}
 	
+	private void DStar() {
+		CellNode rem = goal;
+		goal = state;
+		state = rem;
+		
+		DStarShortestPath();
+		
+		if (openList.isEmpty()) {
+			endAStar(false);
+			return;
+		}
+		
+		moveDStar();
+	}
+	
 	/**
-	 * The A* subroutine that finds the path from the agent's current position to the goal.
+	 * The A* subroutine that finds the shortest path from the agent's current position to the goal.
 	 */
 	private void AStar() {
 		boolean goalFound = false;
@@ -211,8 +220,9 @@ public class Agent extends GridObject {
 			//Look at cells adjacent to us, and update action costs if walls are found.
 			for(Point a : actionList) {
 				CellNode adj = grid.getCellProperties(new Point(state.position.x+a.x,state.position.y+a.y));
-				if (adj != null && grid.getObjectTypeAtCell(adj.position) == ObjectType.WALL)
+				if (adj != null && grid.getObjectTypeAtCell(adj.position) == ObjectType.WALL) {
 					adj.actionCost = Integer.MAX_VALUE;
+				}
 			}
 			
 			CellNode moveTo = remPath.get(i);
@@ -225,6 +235,104 @@ public class Agent extends GridObject {
 			state = moveTo; //Path is not obstructed, move forward.
 			grid.fullTraversedPath.add(moveTo);
 		}
+		
 		grid.moveObjectToCell(grid.agentPoint, state.position);
+	}
+	
+	/**
+	 * The shortest-path finding subroutine used in D* Lite.
+	 */
+	private void DStarShortestPath() {
+		System.out.println("openList top key: "+openList.peek().key+", goal key: "+goal.calculateKey(goal));
+		while (CellNode.compareKeys(openList.peek().key,goal.calculateKey(goal)) < 0 || goal.rhs != goal.gValue) {
+			CellNode minInOpen = openList.peek();
+			System.out.println("Popped: "+minInOpen.gValue+", at "+minInOpen.position);
+			openList.remove(minInOpen);
+			if (minInOpen.gValue > minInOpen.rhs) {
+				minInOpen.setGValue(minInOpen.rhs);
+			} else {
+				minInOpen.setGValue(Integer.MAX_VALUE);
+				updateVertex(minInOpen);
+			}
+			for(Point a : actionList) {
+				CellNode pred = grid.getCellProperties(new Point(minInOpen.position.x+a.x, minInOpen.position.y+a.y));
+				if (pred != null) {
+					updateVertex(pred);
+				}
+			}
+			
+			if (openList.isEmpty())
+				break;
+		}
+	}
+	
+	private void moveDStar() {
+		//Swap goal & state back to normal before moving.
+		CellNode rem = goal;
+		goal = state;
+		state = rem;
+		
+		boolean costChanges = false;
+		while (!costChanges && !state.equals(goal)) {
+			costChanges = false;
+			
+			//Find the next cell to move to.
+			CellNode moveTo = null;
+			int minArg = Integer.MAX_VALUE;
+			for(Point a : actionList) {
+				CellNode succ = grid.getCellProperties(new Point(state.position.x+a.x, state.position.y+a.y));
+				if (succ != null && Main.addNoOverflow(succ.actionCost, succ.gValue) <= minArg) {
+					minArg = Main.addNoOverflow(succ.actionCost, succ.gValue);
+					moveTo = succ;
+				}
+			}
+			state = moveTo;
+			grid.moveObjectToCell(grid.agentPoint, state.position);
+			grid.fullTraversedPath.add(moveTo);
+			
+			System.out.println("Moved value: "+Main.addNoOverflow(moveTo.actionCost,moveTo.gValue)+", at "+moveTo.position);
+			
+			//Look around us for walls, and update path costs.
+			for(Point a : actionList) {
+				CellNode succ = grid.getCellProperties(new Point(state.position.x+a.x, state.position.y+a.y));
+				if (succ != null && grid.getObjectTypeAtCell(succ.position) == ObjectType.WALL) {
+					succ.actionCost = Integer.MAX_VALUE;
+					updateVertex(succ);
+					costChanges = true;
+				}
+			}
+		}
+		
+		//If any path costs changed, update cells accordingly.
+		if (costChanges) {			
+			//Refresh all content still in the open list.
+			ArrayList<CellNode> temp = new ArrayList<CellNode>();
+			while (!openList.isEmpty()) {
+				CellNode minInOpen = openList.peek();
+				minInOpen.calculateKey(goal);
+				temp.add(minInOpen);
+				openList.remove(minInOpen);
+			}
+			for(CellNode cn : temp)
+				openList.insert(cn);	
+		}
+	}
+	
+	private void updateVertex(CellNode cn) {
+		if (!cn.equals(state)) {
+			int minSucc = Integer.MAX_VALUE;
+			for (Point a : actionList) {
+				CellNode succ = grid.getCellProperties(new Point(cn.position.x+a.x, cn.position.y+a.y));
+				if (succ != null && Main.addNoOverflow(succ.actionCost, succ.gValue) < minSucc)
+					minSucc = Main.addNoOverflow(succ.actionCost, succ.gValue);
+			}
+			cn.rhs = minSucc;
+			if (openList.contains(cn))
+				openList.remove(cn);
+			if (cn.rhs != cn.gValue) {
+				cn.calculateKey(goal);
+				openList.insert(cn);
+			}
+		}
 	}
 }
