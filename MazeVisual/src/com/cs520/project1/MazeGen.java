@@ -105,7 +105,7 @@ public class MazeGen {
 		int y = args.length == 2 ? (Integer.parseInt(args[1])) : 50;
 		
 		MazeGen maze;
-		for(int i = 0; i < 50; i+=2){
+		for(int i = 1; i < 50; i+=2){
 			maze = new MazeGen(x, y);
 			maze.display(i);
 		}

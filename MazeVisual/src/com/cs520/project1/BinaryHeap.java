@@ -24,6 +24,16 @@ public class BinaryHeap<T extends Comparable<T>> {
 	}
 	
 	/**
+	 * Same as peek, but also removes the root value from the heap.
+	 * @return The value at the root of the heap.
+	 */
+	public T poll () {
+		T value = peek();
+		remove(value);
+		return value;
+	}
+	
+	/**
 	 * Inserts a new node into the heap.
 	 * @param value The value to insert.
 	 */

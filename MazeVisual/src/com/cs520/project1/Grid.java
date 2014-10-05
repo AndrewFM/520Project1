@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.cs520.project1.UI.PathFind;
 
 /**
  * Represents a grid-based environment where all of the magic happens.
@@ -255,7 +256,8 @@ public class Grid {
 		for(int i=0;i<cellDim.x;i++) {
 			for(int j=0;j<cellDim.y;j++) {				
 				//Render Visited Cells
-				if (cellNodes[i][j].fValue != Integer.MAX_VALUE) {
+				if (cellNodes[i][j].fValue != Integer.MAX_VALUE
+				     || (getMain().getPathFindingAlgorithm() == PathFind.DStarLite && (cellNodes[i][j].rhs != Integer.MAX_VALUE || cellNodes[i][j].key != null))) {
 					visitedSprite.setSize(cellSize.x, cellSize.y);
 					visitedSprite.setPosition(pixelPos.x+cellSize.x*i, pixelPos.y+cellSize.y*j);
 					visitedSprite.draw(batch);
