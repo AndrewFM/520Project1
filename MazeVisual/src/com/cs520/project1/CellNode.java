@@ -14,8 +14,8 @@ public class CellNode implements Comparable<CellNode> {
 	public int search;
 	public int actionCost;
 	public CellNode parentOnPath;
-	public int rhs;   //Used by D* Lite only
-	public Point key; //Used by D* Lite only
+	public int rhs;   //"right hand side": Used by D* Lite only.
+	public Point key; //Used by D* Lite only.
 	
 	public CellNode(Main program, Point cell) {
 		this.position = new Point(cell.x, cell.y);

@@ -64,12 +64,15 @@ public class Agent extends GridObject {
 		started = true;
 	}
 	
+	/**
+	 * Called repeatedly to "animate" the pathfinding process.
+	 */
 	public void update() {
 		while (started) {
 			if (grid.getMain().getPathFindingAlgorithm() == PathFind.DStarLite)
-				DStar();
+				DStarLite();
 			else
-				RepeatedAStar(); //TODO: Backwards A* is sometimes really slow. Check for bugs.
+				RepeatedAStar();
 			
 			if (state.equals(goal))
 				endAStar(true);
@@ -79,6 +82,10 @@ public class Agent extends GridObject {
 		}
 	}
 	
+	/**
+	 * Terminate a pathfinding process once the agent has nothing more to do.
+	 * @param success true if the goal was found, false if no path to goal.
+	 */
 	private void endAStar(boolean success) {
 		started = false;
 		grid.shortestPresumedPath.clear();
@@ -168,6 +175,10 @@ public class Agent extends GridObject {
 		}
 	}
 	
+	/**
+	 * Trace over the shortest path that A* found from the agent to the goal, and start moving the agent
+	 * along the path checking for obstacles.
+	 */
 	private void tracePathAndMove() {
 		int startPath, endPath, pathIncrement;
 		
@@ -220,7 +231,10 @@ public class Agent extends GridObject {
 		grid.moveObjectToCell(grid.agentPoint, state.position);
 	}
 	
-	private void DStar() {				
+	/**
+	 * Implementation for D* Lite
+	 */
+	private void DStarLite() {				
 		if (openList.isEmpty() || state.gValue == Integer.MAX_VALUE) {
 			endAStar(false);
 			return;
@@ -264,6 +278,10 @@ public class Agent extends GridObject {
 		}
 	}
 	
+	/**
+	 * Move the agent based on the g-values computed by the previous D* call, until an obstacle is
+	 * detected, at which point edge costs should be updated and the movement terminated.
+	 */
 	private void moveDStar() {		
 		ArrayList<CellNode> costChanges = new ArrayList<CellNode>();
 		boolean costChangedOnPath = false;
@@ -312,6 +330,10 @@ public class Agent extends GridObject {
 		}
 	}
 	
+	/**
+	 * Subroutine of D* Lite that updates the rhs values of a cell, and removes/inserts it from the open list.
+	 * @param cn The cell to update.
+	 */
 	private void updateVertex(CellNode cn) {
 		if (!cn.equals(goal)) {
 			int minSucc = Integer.MAX_VALUE;
