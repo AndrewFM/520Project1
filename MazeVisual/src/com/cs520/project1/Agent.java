@@ -66,7 +66,6 @@ public class Agent extends GridObject {
 	
 	public void update() {
 		while (started) {
-			//TODO: Implement D* Lite.
 			if (grid.getMain().getPathFindingAlgorithm() == PathFind.DStarLite)
 				DStar();
 			else
@@ -267,7 +266,8 @@ public class Agent extends GridObject {
 	
 	private void moveDStar() {		
 		ArrayList<CellNode> costChanges = new ArrayList<CellNode>();
-		while (costChanges.size() == 0 && !state.equals(goal)) {
+		boolean costChangedOnPath = false;
+		while (!costChangedOnPath && !state.equals(goal)) {
 			//Find the next cell to move to.
 			CellNode moveTo = null;
 			int minArg = Integer.MAX_VALUE;
@@ -285,7 +285,8 @@ public class Agent extends GridObject {
 				state = moveTo;
 				grid.moveObjectToCell(grid.agentPoint, state.position);
 				grid.fullTraversedPath.add(moveTo);
-			}
+			} else
+				costChangedOnPath = true;
 		}
 		
 		//If any path costs changed, update cells accordingly.
